@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Video Downloader — Download HD Videos Free | SwiftGrab</title>
+  <meta name="description" content="Download YouTube videos in 144p, 360p, 720p, 1080p or MP3 audio format. Free, fast, no registration required. Works with YouTube Shorts and playlists." />
+  <meta name="keywords" content="youtube downloader, download youtube video, youtube to mp3, youtube hd download, free youtube downloader, download shorts" />
+  <link rel="canonical" href="https://swiftgrab.app/youtube.html" />
+  <meta property="og:title" content="YouTube Downloader — SwiftGrab" />
+  <meta property="og:description" content="Download YouTube videos in any quality — free and instant." />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"How do I download a YouTube video?","acceptedAnswer":{"@type":"Answer","text":"Paste the YouTube video URL into SwiftGrab's downloader, click Fetch, choose your desired quality, and click Download. Your file will start downloading automatically."}},
+    {"@type":"Question","name":"Is it safe to use YouTube downloaders?","acceptedAnswer":{"@type":"Answer","text":"SwiftGrab is safe to use. We do not install anything on your device and never store your data."}}
+  ]}</script>
+    <!-- PWA Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#00d4ff" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SwiftGrab" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── STICKY HEADER FIX ── */
+    .site-header {
+      position: fixed !important;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      overflow: visible !important;
+    }
+    body { padding-top: 68px; }
+
+    /* ── Global overflow fix ── */
+    html, body { overflow-x: hidden; }
+    .nav { flex-wrap: nowrap !important; }
+    .nav-actions { flex-shrink: 0; }
+    @media (max-width: 768px) {
+      .hamburger { display: flex !important; flex-shrink: 0; }
+    }
+
+    /* ── Tool box ── */
+    .tool-box {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 36px;
+      backdrop-filter: blur(24px); max-width: 760px; margin: 0 auto;
+    }
+    .url-row {
+      display: flex; gap: 12px; margin-bottom: 20px;
+    }
+    .url-row .input-wrap { flex: 1; }
+    .url-row input { border-radius: 12px; padding: 15px 18px; font-size:1rem; }
+
+    /* Preview */
+    .preview-box {
+      display: none;
+      background: var(--navy3); border-radius: var(--radius);
+      overflow: hidden; margin-bottom: 24px;
+      border: 1px solid var(--border);
+      animation: fadeUp .4s ease;
+    }
+    .preview-box.show { display: block; }
+    .preview-inner { display: flex; gap: 0; }
+    .preview-thumb {
+      width: 200px; flex-shrink: 0; position: relative; overflow: hidden;
+    }
+    .preview-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .preview-thumb .play-icon {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.4); font-size: 2.5rem;
+    }
+    .preview-info { padding: 18px 20px; flex: 1; }
+    .preview-info h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: var(--white); }
+    .preview-info .meta { font-size: .82rem; color: var(--white3); margin-bottom: 14px; }
+    .yt-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ff0000; color: #fff; border-radius: 6px;
+      font-size: .75rem; font-weight: 700; padding: 3px 10px;
+    }
+
+    /* Quality buttons */
+    .quality-section { margin-bottom: 24px; }
+    .quality-label { font-size: .82rem; font-weight: 600; color: var(--white3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+    .quality-grid  { display: flex; flex-wrap: wrap; gap: 10px; }
+    .q-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--navy2); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 11px 18px; cursor: pointer;
+      transition: all var(--transition); color: var(--white); font-family: var(--font-body);
+    }
+    .q-btn:hover, .q-btn.selected {
+      border-color: var(--cyan); background: var(--cyan-glow); color: var(--cyan);
+    }
+    .q-btn .badge {
+      font-size: .7rem; background: rgba(255,255,255,.1); border-radius: 4px;
+      padding: 2px 6px; font-weight: 700;
+    }
+    .q-btn.mp3-btn .badge { background: rgba(0,229,160,.15); color: var(--green); }
+
+    /* Download action */
+    .dl-action { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+    /* Copy link */
+    .copy-row { display: flex; gap: 10px; margin-top: 16px; }
+    .copy-row input { font-size: .85rem; padding: 10px 14px; }
+
+    /* Steps */
+    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 48px; }
+    .step-card { text-align: center; padding: 28px 20px; }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      font-weight: 800; font-family: var(--font-display); font-size: 1.1rem;
+    }
+    .step-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .step-card p  { font-size: .88rem; color: var(--white2); }
+
+    /* FAQ */
+    .faq-grid { display: flex; flex-direction: column; gap: 10px; max-width: 760px; margin: 0 auto; }
+
+    @media(max-width:600px) {
+      .url-row { flex-direction: column; }
+      .preview-inner { flex-direction: column; }
+      .preview-thumb { width: 100%; height: 180px; }
+      .steps { grid-template-columns: 1fr; }
+      .tool-box { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="container">
+    <nav class="nav">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">⚡</div>
+        Swift<span>Grab</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="youtube.html" class="active">YT Downloader</a>
+        <a href="compress.html">Compressor</a>
+        <a href="passport.html">Passport Photo</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      </div>
+    </nav>
+  </div>
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="youtube.html">▶️ YT Downloader</a>
+    <a href="compress.html">🗜️ Image Compressor</a>
+    <a href="passport.html">📷 Passport Photo</a>
+  </div>
+</header>
+
+<!-- ── AD BANNER ── -->
+<div class="container" style="padding-top:8px;padding-bottom:0;">
+  <div class="ad-banner ad-banner-728">📢 Advertisement</div>
+</div>
+
+<!-- ── HERO ── -->
+<div class="page-hero" style="padding:18px 0 20px;">
+  <div class="container">
+    <div class="section-label">▶️ Free YouTube Downloader</div>
+    <p style="font-size:clamp(.95rem,2vw,1.1rem);color:var(--white2);margin-top:10px;max-width:600px;margin-left:auto;margin-right:auto;">Paste any YouTube link — video, Short, or playlist. Choose your quality and download in seconds.</p>
+  </div>
+</div>
+
+<!-- ── MAIN TOOL ── -->
+<section style="padding: 0 0 60px;">
+  <div class="container">
+
+    <div class="tool-box">
+      <!-- URL Input -->
+      <div class="url-row">
+        <div class="input-wrap" style="flex:1;">
+          <input type="url" id="yt-url" placeholder="Paste YouTube URL here — e.g. https://youtube.com/watch?v=..." autocomplete="off" />
+        </div>
+        <button class="btn btn-primary" id="fetch-btn" style="white-space:nowrap;" onclick="fetchVideo()">
+          🔍 Fetch Video
+        </button>
+      </div>
+
+      <!-- Validation message -->
+      <div id="url-error" style="color:#ff5c7a;font-size:.88rem;margin-bottom:12px;display:none;"></div>
+
+      <!-- Preview Box -->
+      <div class="preview-box" id="preview-box">
+        <div class="preview-inner">
+          <div class="preview-thumb" id="preview-thumb" style="cursor:pointer;" title="Click to play">
+            <img id="thumb-img" src="" alt="Video thumbnail" loading="lazy" />
+            <div class="play-icon" id="play-btn" onclick="embedVideo()">▶</div>
+          </div>
+          <div class="preview-info">
+            <div class="yt-badge">▶ YouTube</div>
+            <h3 id="video-title" style="margin-top:10px;">Loading title...</h3>
+            <div class="meta" id="video-meta">Video detected • Ready to download</div>
+            <div style="font-size:.8rem;color:var(--white3);" id="video-id-show"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quality Selector -->
+      <div class="quality-section" id="quality-section" style="display:none;">
+        <div class="quality-label">📥 Select Quality</div>
+        <div class="quality-grid" id="quality-grid">
+          <button class="q-btn" data-quality="144p" onclick="selectQuality(this)">
+            🎬 <strong>144p</strong> <span class="badge">Low</span>
+          </button>
+          <button class="q-btn" data-quality="360p" onclick="selectQuality(this)">
+            🎬 <strong>360p</strong> <span class="badge">SD</span>
+          </button>
+          <button class="q-btn selected" data-quality="720p" onclick="selectQuality(this)">
+            🎬 <strong>720p</strong> <span class="badge">HD</span>
+          </button>
+          <button class="q-btn" data-quality="1080p" onclick="selectQuality(this)">
+            🎬 <strong>1080p</strong> <span class="badge">Full HD</span>
+          </button>
+          <button class="q-btn mp3-btn" data-quality="mp3" onclick="selectQuality(this)">
+            🎵 <strong>MP3</strong> <span class="badge">Audio</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Download Actions -->
+      <div id="dl-section" style="display:none;">
+        <div class="dl-action">
+          <button class="btn btn-primary" style="font-size:1rem;padding:14px 28px;" onclick="startDownload()" id="dl-btn">
+            📥 Download Now
+          </button>
+          <button class="btn btn-ghost" onclick="resetTool()">
+            🔄 New Video
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="steps">
+      <div class="card step-card anim-up d1">
+        <div class="step-num">1</div>
+        <h3>Paste URL</h3>
+        <p>Copy any YouTube link and paste it into the input field above.</p>
+      </div>
+      <div class="card step-card anim-up d2">
+        <div class="step-num">2</div>
+        <h3>Choose Quality</h3>
+        <p>Select your preferred video quality or pick MP3 for audio only.</p>
+      </div>
+      <div class="card step-card anim-up d3">
+        <div class="step-num">3</div>
+        <h3>Download</h3>
+        <p>Click Download and your file will be ready in seconds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AD SIDEBAR SIMULATION ── -->
+<div class="container" style="margin-bottom:40px;">
+  <div class="ad-banner ad-banner-300" style="max-width:300px;margin:0 auto;">📢 300×250 Ad</div>
+</div>
+
+<!-- ── FAQ ── -->
+<section class="section" style="background:var(--navy2);">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:40px;">
+      <div class="section-label">❓ FAQ</div>
+      <h2 class="section-title">YouTube Downloader <span class="grad">FAQs</span></h2>
+    </div>
+    <div class="faq-grid">
+      <div class="faq-item"><button class="faq-q">How do I download a YouTube video? <span class="icon">+</span></button><div class="faq-a">Simply paste the YouTube URL into the box above, click "Fetch Video", choose your quality (144p to 1080p or MP3), then click Download. Your file will start downloading automatically.</div></div>
+      <div class="faq-item"><button class="faq-q">Is it safe to use SwiftGrab's YouTube downloader? <span class="icon">+</span></button><div class="faq-a">Yes, completely safe. We don't install anything on your device and never store your data. All downloads are handled securely and privately.</div></div>
+      <div class="faq-item"><button class="faq-q">Can I download YouTube Shorts? <span class="icon">+</span></button><div class="faq-a">Absolutely! SwiftGrab supports regular YouTube videos, Shorts, and playlist URLs. Just paste the Shorts link and it works the same way.</div></div>
+      <div class="faq-item"><button class="faq-q">What video qualities are available? <span class="icon">+</span></button><div class="faq-a">We offer 144p, 360p, 720p (HD), and 1080p (Full HD) video formats, as well as MP3 audio extraction — all at no cost.</div></div>
+      <div class="faq-item"><button class="faq-q">Why am I seeing an ad before the download starts? <span class="icon">+</span></button><div class="faq-a">Ads help us keep SwiftGrab free for everyone. The ad closes automatically after a few seconds and your download begins. We appreciate your support!</div></div>
+      <div class="faq-item"><button class="faq-q">Can I download copyrighted content? <span class="icon">+</span></button><div class="faq-a">SwiftGrab is intended for personal and educational use only. Please respect YouTube's Terms of Service and content creators' intellectual property rights. Do not distribute downloaded content.</div></div>
+      <div class="faq-item"><button class="faq-q">Does this work on mobile? <span class="icon">+</span></button><div class="faq-a">Yes! SwiftGrab's YouTube downloader is fully mobile-optimized. It works on Android, iPhone, and any modern mobile browser.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo-text">⚡ Swift<span style="color:var(--cyan)">Grab</span></div>
+        <p style="font-size:.9rem;color:var(--white2);max-width:280px;">Free online tools — download, compress, create.</p>
+      </div>
+      <div class="footer-col"><h4>Tools</h4><ul class="footer-links"><li><a href="youtube.html">YT Downloader</a></li><li><a href="compress.html">Compressor</a></li><li><a href="passport.html">Passport Photo</a></li></ul></div>
+      <div class="footer-col"><h4>Info</h4><ul class="footer-links"><li><a href="index.html">Home</a></li><li><a href="terms.html">Terms</a></li><li><a href="privacy.html">Privacy</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul class="footer-links"><li><a href="terms.html">Terms & Conditions</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 SwiftGrab · For personal & educational use only.</p>
+      <p>⚡ Fast · 🔒 Private · 💸 Free</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ── AD MODAL ── -->
+<div class="modal-overlay" id="ad-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="ad-close-btn">✕</button>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:4px;">Advertisement</div>
+      <h3 style="font-size:1.1rem;font-weight:700;">Preparing your download...</h3>
+    </div>
+    <!-- Fake ad banner -->
+    <div class="ad-banner ad-banner-300" style="margin-bottom:20px;">
+      📢 Your Ad Here — 300×250
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:.85rem;color:var(--white2);margin-bottom:12px;" id="ad-timer">Close in 3s</div>
+      <div class="progress-wrap" style="max-width:200px;margin:0 auto 16px;">
+        <div class="progress-bar" id="ad-progress" style="width:0%;"></div>
+      </div>
+      <p style="font-size:.8rem;color:var(--white3);">Ads keep SwiftGrab free for everyone. Thank you! 🙏</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script src="pwa.js"></script>
+<script>
+/* ── YouTube Downloader Logic ── */
+
+let selectedQuality = '720p';
+let currentVideoUrl = '';
+let currentVideoId  = '';
+let videoEmbedded   = false;
+
+/* ── URL Helpers ── */
+function cleanUrl(raw) {
+  // Strip zero-width spaces, trim, normalize
+  return raw.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+}
+
+function isValidYouTubeUrl(url) {
+  return /(?:youtube\.com\/(?:watch\?.*v=|shorts\/|live\/|embed\/)|youtu\.be\/|m\.youtube\.com\/(?:watch\?.*v=|live\/))/i.test(url);
+}
+
+function extractYouTubeId(url) {
+  const patterns = [
+    /[?&]v=([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /\/shorts\/([a-zA-Z0-9_-]{11})/,
+    /\/live\/([a-zA-Z0-9_-]{11})/,
+    /\/embed\/([a-zA-Z0-9_-]{11})/
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+/* ── Fetch Video ── */
+function fetchVideo() {
+  const input = document.getElementById('yt-url');
+  const raw   = input.value;
+  const url   = cleanUrl(raw);
+  const errEl = document.getElementById('url-error');
+
+  errEl.style.display = 'none';
+  errEl.textContent = '';
+
+  if (!url) {
+    errEl.textContent = '⚠️ Please enter a YouTube URL first.';
+    errEl.style.display = 'block';
+    input.focus();
+    return;
+  }
+
+  if (!isValidYouTubeUrl(url)) {
+    errEl.textContent = '❌ Invalid URL. Please enter a valid YouTube link (youtube.com or youtu.be).';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const videoId = extractYouTubeId(url);
+  if (!videoId) {
+    errEl.textContent = '❌ Could not extract video ID. Please check the URL format.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Normalize URL
+  currentVideoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  currentVideoId  = videoId;
+  videoEmbedded   = false;
+
+  const btn = document.getElementById('fetch-btn');
+  btn.innerHTML = '<span class="spinner"></span> Fetching...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    showPreview(videoId, currentVideoUrl);
+    btn.innerHTML = '🔍 Fetch Video';
+    btn.disabled  = false;
+  }, 900);
+}
+
+function showPreview(videoId, url) {
+  const thumb = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  const thumbEl = document.getElementById('thumb-img');
+  thumbEl.src = thumb;
+  thumbEl.onerror = function() {
+    this.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  };
+
+  // Reset embed if previously played
+  if (videoEmbedded) {
+    const thumbWrap = document.getElementById('preview-thumb');
+    thumbWrap.innerHTML = `
+      <img id="thumb-img" src="${thumb}" alt="Video thumbnail" loading="lazy" />
+      <div class="play-icon" id="play-btn" onclick="embedVideo()">▶</div>`;
+    videoEmbedded = false;
+  }
+
+  // Set placeholder first
+  document.getElementById('video-title').textContent = 'Fetching title...';
+  document.getElementById('video-meta').textContent  = `ID: ${videoId} · Ready to download`;
+  document.getElementById('video-id-show').textContent = url.length > 55 ? url.slice(0,55)+'…' : url;
+
+  // Fetch real title via YouTube oEmbed (no API key needed)
+  fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('video-title').textContent = data.title || 'YouTube Video';
+      document.getElementById('video-meta').textContent  = `by ${data.author_name || 'YouTube'} · Ready to download`;
+    })
+    .catch(() => {
+      document.getElementById('video-title').textContent = 'YouTube Video';
+    });
+
+  document.getElementById('preview-box').classList.add('show');
+  document.getElementById('quality-section').style.display = 'block';
+  document.getElementById('dl-section').style.display = 'block';
+  document.getElementById('preview-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  showToast('✅ Video found! Choose quality and download.', 'success');
+}
+
+/* ── Play Embed (global, called via onclick) ── */
+function embedVideo() {
+  if (!currentVideoId) return;
+  const wrap = document.getElementById('preview-thumb');
+  wrap.innerHTML = `<iframe
+    src="https://www.youtube.com/embed/${currentVideoId}?autoplay=1&rel=0"
+    width="100%" height="100%"
+    style="border:none;display:block;min-height:180px;"
+    allow="autoplay; encrypted-media; fullscreen"
+    allowfullscreen></iframe>`;
+  videoEmbedded = true;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('yt-url').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fetchVideo();
+  });
+  // Auto-paste if clipboard has a YT link
+  document.getElementById('yt-url').addEventListener('focus', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && isValidYouTubeUrl(text) && !document.getElementById('yt-url').value) {
+        document.getElementById('yt-url').value = cleanUrl(text);
+      }
+    } catch(e) { /* clipboard not available */ }
+  });
+});
+
+function selectQuality(btn) {
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedQuality = btn.dataset.quality;
+}
+
+/* ── Download via Cobalt API ── */
+const COBALT_INSTANCES = [
+  '/.netlify/functions/cobalt',
+];
+
+async function tryCobalt(instance, url, isAudio, qualityNum) {
+  const body = { url, downloadMode: isAudio ? 'audio' : 'auto' };
+  if (isAudio) {
+    body.audioFormat = 'mp3';
+  } else {
+    body.videoQuality = qualityNum; // "144","360","720","1080"
+  }
+
+  const res = await fetch(instance, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+
+  if (data.status === 'error') throw new Error(data.error?.code || 'cobalt error');
+  if (!data.url && !(data.picker?.length)) throw new Error('no download url');
+  return data;
+}
+
+async function startDownload() {
+  if (!currentVideoUrl) {
+    showToast('Please fetch a video first.', 'warn');
+    return;
+  }
+
+  // Show ad modal first, wait for user to close or timer
+  animateAdProgress();
+  await showAdModal({ seconds: 3 });
+
+  const dlBtn = document.getElementById('dl-btn');
+  const originalLabel = dlBtn.innerHTML;
+  dlBtn.innerHTML = '<span class="spinner"></span> Downloading...';
+  dlBtn.disabled = true;
+
+  const isAudio  = selectedQuality === 'mp3';
+  const qualityNum = selectedQuality.replace('p', ''); // "720", "1080" etc.
+  const ext = isAudio ? 'mp3' : 'mp4';
+
+  let downloaded = false;
+
+  // Try each cobalt instance in order
+  for (const instance of COBALT_INSTANCES) {
+    try {
+      const data = await tryCobalt(instance, currentVideoUrl, isAudio, qualityNum);
+
+      let downloadUrl = data.url;
+      if (data.status === 'picker' && data.picker?.length) {
+        downloadUrl = data.picker[0].url;
+      }
+
+      triggerBrowserDownload(downloadUrl, `swiftgrab_${qualityNum || 'audio'}.${ext}`);
+      showToast('🚀 Download started!', 'success');
+      downloaded = true;
+      break;
+
+    } catch(err) {
+      console.warn(`Cobalt instance ${instance} failed:`, err.message);
+    }
+  }
+
+  if (!downloaded) {
+    showToast('⚡ Opening download — please wait...', 'info', 3000);
+    showToast('❌ Download failed. Try again.', 'error', 4000);
+  }
+
+  dlBtn.innerHTML = originalLabel;
+  dlBtn.disabled  = false;
+}
+
+function triggerBrowserDownload(url, filename) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 1000);
+}
+
+function animateAdProgress() {
+  const bar = document.getElementById('ad-progress');
+  if (!bar) return;
+  bar.style.width = '0%';
+  let pct = 0;
+  const iv = setInterval(() => {
+    pct += 2.2;
+    bar.style.width = Math.min(pct, 100) + '%';
+    if (pct >= 100) clearInterval(iv);
+  }, 66);
+}
+
+function resetTool() {
+  document.getElementById('yt-url').value = '';
+  document.getElementById('preview-box').classList.remove('show');
+  document.getElementById('quality-section').style.display = 'none';
+  document.getElementById('dl-section').style.display = 'none';
+  document.getElementById('url-error').style.display = 'none';
+  currentVideoUrl = ''; currentVideoId = ''; videoEmbedded = false;
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector('[data-quality="720p"]').classList.add('selected');
+  selectedQuality = '720p';
+}
+</script>
+</body>
+</html>
