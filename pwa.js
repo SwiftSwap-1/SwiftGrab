@@ -23,23 +23,21 @@
     window.navigator.standalone === true ||
     document.referrer.includes('android-app://');
 
-  /* ── 3. Install Prompt Handling ─────────────────────────── */
+  /* ── 3. Install Button Logic ─────────────────────────────
+     RULE:
+     - If already installed (isPWA) → ALWAYS hide button
+     - If NOT installed + beforeinstallprompt fired → show button
+     - iOS Safari (no beforeinstallprompt) → show iOS hint banner
+  ────────────────────────────────────────────────────────── */
   let deferredPrompt = null;
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    showInstallButton();
-  });
-
-  window.addEventListener('appinstalled', () => {
-    deferredPrompt = null;
-    hideInstallButton();
-    showToastIfAvailable('✅ SwiftGrab installed! Open it from your home screen.', 'success');
-  });
+  function getInstallBtn() {
+    return document.getElementById('pwa-install-btn');
+  }
 
   function showInstallButton() {
-    const btn = document.getElementById('pwa-install-btn');
+    if (isPWA()) return; // Never show if already installed
+    const btn = getInstallBtn();
     if (btn) {
       btn.style.display = 'inline-flex';
       btn.classList.add('pwa-btn-visible');
@@ -47,14 +45,29 @@
   }
 
   function hideInstallButton() {
-    const btn = document.getElementById('pwa-install-btn');
+    const btn = getInstallBtn();
     if (btn) {
-      btn.classList.add('pwa-btn-hiding');
-      setTimeout(() => { btn.style.display = 'none'; }, 400);
+      btn.style.display = 'none';
+      btn.classList.remove('pwa-btn-visible');
     }
   }
 
-  // Expose for inline onclick
+  // Listen for Chrome/Android install prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallButton();
+  });
+
+  // After user installs — hide button immediately
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    hideInstallButton();
+    hideIOSBanner();
+    showToastIfAvailable('✅ SwiftGrab installed! Open it from your home screen.', 'success');
+  });
+
+  // Expose for inline onclick on button
   window.triggerPWAInstall = async function () {
     if (!deferredPrompt) {
       showToastIfAvailable('ℹ️ Already installed or not supported on this browser.', 'info');
@@ -68,7 +81,46 @@
     }
   };
 
-  /* ── 4. Splash Screen ───────────────────────────────────── */
+  /* ── 4. iOS Install Hint Banner ──────────────────────────
+     iOS Safari never fires beforeinstallprompt.
+     Show a manual hint banner for iOS Safari users only.
+  ────────────────────────────────────────────────────────── */
+  function injectIOSBanner() {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (!isIOS || !isSafari || isPWA()) return;
+
+    // Don't show if user dismissed it this session
+    if (sessionStorage.getItem('ios-banner-dismissed')) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'ios-install-banner';
+    banner.style.cssText = `
+      position: fixed; bottom: 16px; left: 16px; right: 16px; z-index: 9998;
+      background: #1a2240; border: 1.5px solid #00d4ff; border-radius: 14px;
+      padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5); animation: fadeUp .4s ease;
+    `;
+    banner.innerHTML = `
+      <span style="font-size:1.6rem;flex-shrink:0;">📲</span>
+      <div style="flex:1;font-size:.85rem;color:#e0e8ff;line-height:1.5;">
+        <strong style="color:#00d4ff;">Install SwiftGrab</strong><br>
+        Tap <strong>Share</strong> <span style="font-size:1rem;">⎙</span> then <strong>"Add to Home Screen"</strong>
+      </div>
+      <button id="ios-banner-close" style="background:none;border:none;color:#8899bb;font-size:1.3rem;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>
+    `;
+    document.body.appendChild(banner);
+
+    document.getElementById('ios-banner-close').addEventListener('click', hideIOSBanner);
+  }
+
+  function hideIOSBanner() {
+    const banner = document.getElementById('ios-install-banner');
+    if (banner) banner.remove();
+    sessionStorage.setItem('ios-banner-dismissed', '1');
+  }
+
+  /* ── 5. Splash Screen ───────────────────────────────────── */
   function injectSplash() {
     if (!isPWA()) return;
     const splash = document.createElement('div');
@@ -87,7 +139,7 @@
     setTimeout(() => splash.remove(), 1700);
   }
 
-  /* ── 5. Bottom Navigation (PWA only) ────────────────────── */
+  /* ── 6. Bottom Navigation (PWA only) ────────────────────── */
   function injectBottomNav() {
     if (!isPWA()) return;
 
@@ -110,35 +162,25 @@
     `).join('');
 
     document.body.appendChild(nav);
-
-    // Add bottom padding to body so content doesn't hide behind nav
     document.body.style.paddingBottom = 'calc(68px + env(safe-area-inset-bottom))';
   }
 
-  /* ── 6. Standalone UI — hide website chrome ─────────────── */
+  /* ── 7. Standalone UI — hide website chrome ─────────────── */
   function applyStandaloneUI() {
     if (!isPWA()) return;
 
     document.body.classList.add('pwa-mode');
 
-    // Hide header on inner pages (nav replaced by bottom bar)
-    // Keep header on index for branding but simplify it
     const currentPage = location.pathname.split('/').pop() || 'index.html';
 
     if (currentPage === 'index.html' || currentPage === '') {
-      // On home page: hide FAQ → footer (website-like sections)
-      const sectionsToHide = ['#faq'];
-      const allSections = document.querySelectorAll('section');
-
-      // Find FAQ section index and hide everything from it onwards
       let faqFound = false;
-      allSections.forEach(s => {
+      document.querySelectorAll('section').forEach(s => {
         if (s.id === 'faq') faqFound = true;
         if (faqFound) s.style.display = 'none';
       });
 
-      // Also hide testimonials & CTA (pure marketing)
-      allSections.forEach(s => {
+      document.querySelectorAll('section').forEach(s => {
         const label = s.querySelector('.section-label');
         if (label) {
           const txt = label.textContent.trim();
@@ -148,49 +190,40 @@
         }
       });
 
-      // Hide footer
       const footer = document.querySelector('.site-footer');
       if (footer) footer.style.display = 'none';
 
-      // Hide the hero CTA bottom-stats (too website-like)
       const heroStats = document.querySelector('.hero-stats');
       if (heroStats) heroStats.style.display = 'none';
     }
 
-    // On all pages: simplify header
     const siteHeader = document.querySelector('.site-header');
-    if (siteHeader) {
-      siteHeader.classList.add('pwa-header');
-    }
+    if (siteHeader) siteHeader.classList.add('pwa-header');
 
-    // Hide nav-links (replaced by bottom nav)
     const navLinks = document.querySelector('.nav-links');
     if (navLinks) navLinks.style.display = 'none';
 
-    // Hide nav action CTA button (redundant in app mode)
     const navActionBtn = document.querySelector('.nav-actions .btn');
     if (navActionBtn) navActionBtn.style.display = 'none';
   }
 
-  /* ── 7. Disable bounce/overscroll ──────────────────────── */
+  /* ── 8. Disable bounce/overscroll ──────────────────────── */
   function disableBounce() {
     if (!isPWA()) return;
     document.body.style.overscrollBehavior = 'none';
     document.documentElement.style.overscrollBehavior = 'none';
   }
 
-  /* ── 8. Page transition effect ──────────────────────────── */
+  /* ── 9. Page transition effect ──────────────────────────── */
   function initPageTransitions() {
     if (!isPWA()) return;
 
-    // Fade-in on load
     document.body.style.opacity = '0';
     document.body.style.transition = 'opacity 0.25s ease';
     window.addEventListener('load', () => {
       requestAnimationFrame(() => { document.body.style.opacity = '1'; });
     });
 
-    // Intercept same-origin links for smooth transition
     document.addEventListener('click', (e) => {
       const link = e.target.closest('a[href]');
       if (!link) return;
@@ -202,12 +235,12 @@
     });
   }
 
-  /* ── Helper: show toast without hard dependency ─────────── */
+  /* ── Helper ─────────────────────────────────────────────── */
   function showToastIfAvailable(msg, type) {
     if (typeof showToast === 'function') showToast(msg, type);
   }
 
-  /* ── Init on DOM ready ───────────────────────────────────── */
+  /* ── Init ───────────────────────────────────────────────── */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
@@ -215,14 +248,21 @@
   }
 
   function init() {
-    injectSplash();
-    applyStandaloneUI();
-    injectBottomNav();
-    disableBounce();
-    initPageTransitions();
+    // If already in PWA mode — hide install button immediately, no iOS banner
+    if (isPWA()) {
+      hideInstallButton();
+      injectSplash();
+      applyStandaloneUI();
+      injectBottomNav();
+      disableBounce();
+      initPageTransitions();
+      return;
+    }
 
-    // If already in PWA, hide install button immediately
-    if (isPWA()) hideInstallButton();
+    // Not in PWA mode — show iOS banner if applicable, button shown on beforeinstallprompt
+    injectIOSBanner();
+    // Note: install button stays hidden until beforeinstallprompt fires (Chrome/Android)
+    // For iOS, the banner handles it
   }
 
 })();
