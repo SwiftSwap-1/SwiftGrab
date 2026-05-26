@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free Image Compressor — Compress JPG PNG WEBP Online | SwiftGrab</title>
+  <meta name="description" content="Compress images from MB to KB online for free. Supports JPG, PNG, WEBP. Adjust quality, target size, and format. No upload to server — 100% browser-based." />
+  <meta name="keywords" content="image compressor, compress image online, reduce image size, jpg compressor, png compressor, webp compressor, MB to KB" />
+  <link rel="canonical" href="https://swiftgrab.app/compress.html" />
+    <!-- PWA Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#00d4ff" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SwiftGrab" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .tool-box {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 36px;
+      backdrop-filter: blur(24px); max-width: 780px; margin: 0 auto;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 50px 20px; text-align: center; cursor: pointer;
+      transition: all var(--transition); position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--cyan); background: var(--cyan-glow);
+    }
+    .drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+    .drop-text { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+    .drop-sub  { font-size: .85rem; color: var(--white3); }
+
+    /* Controls */
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0; }
+    .ctrl-label { font-size: .82rem; font-weight: 600; color: var(--white3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+    .ctrl-row   { display: flex; align-items: center; gap: 12px; }
+
+    /* Slider */
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      flex: 1; height: 6px; border-radius: 100px;
+      background: var(--navy3); outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--cyan); cursor: pointer; box-shadow: 0 0 8px rgba(0,212,255,.4);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%; border: none;
+      background: var(--cyan); cursor: pointer;
+    }
+    .slider-val {
+      min-width: 42px; text-align: center; font-weight: 700; font-size: .95rem; color: var(--cyan);
+    }
+
+    /* Format tabs */
+    .fmt-tabs { display: flex; gap: 8px; }
+    .fmt-tab {
+      flex: 1; padding: 10px; border-radius: 10px; text-align: center;
+      background: var(--navy2); border: 1.5px solid var(--border);
+      cursor: pointer; font-weight: 600; font-size: .9rem;
+      transition: all var(--transition); color: var(--white);
+    }
+    .fmt-tab.active { border-color: var(--cyan); background: var(--cyan-glow); color: var(--cyan); }
+
+    /* Preview row */
+    .preview-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;
+    }
+    .img-preview-box {
+      background: var(--navy3); border-radius: var(--radius); padding: 16px;
+      text-align: center; border: 1px solid var(--border);
+    }
+    .img-preview-box img {
+      max-width: 100%; max-height: 180px; object-fit: contain;
+      border-radius: 8px; display: block; margin: 0 auto 10px;
+    }
+    .img-preview-box .label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--white3); margin-bottom: 6px; }
+    .img-preview-box .size-val { font-size: 1.1rem; font-weight: 800; font-family: var(--font-display); }
+    .size-reduction {
+      background: linear-gradient(135deg,rgba(0,229,160,.15),rgba(0,212,255,.1));
+      border: 1px solid rgba(0,229,160,.3); border-radius: 10px;
+      padding: 14px 18px; text-align: center; margin-bottom: 20px;
+    }
+    .size-reduction .pct { font-size: 2rem; font-weight: 800; color: var(--green); font-family: var(--font-display); }
+    .size-reduction small { color: var(--white2); font-size: .88rem; }
+
+    /* Rename */
+    .rename-row { display: flex; gap: 10px; margin-bottom: 20px; }
+
+    @media(max-width:600px) {
+      .controls-grid { grid-template-columns: 1fr; }
+      .preview-row   { grid-template-columns: 1fr; }
+      .tool-box { padding: 20px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="container">
+    <nav class="nav">
+      <a href="index.html" class="logo"><div class="logo-icon">⚡</div>Swift<span>Grab</span></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="youtube.html">YT Downloader</a>
+        <a href="compress.html" class="active">Compressor</a>
+        <a href="passport.html">Passport Photo</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      </div>
+    </nav>
+  </div>
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="youtube.html">▶️ YT Downloader</a>
+    <a href="compress.html">🗜️ Image Compressor</a>
+    <a href="passport.html">📷 Passport Photo</a>
+  </div>
+</header>
+
+<div class="container" style="padding-top:16px;">
+  <div class="ad-banner ad-banner-728">📢 Advertisement</div>
+</div>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="section-label">🗜️ Image Compressor</div>
+    <h1>Compress Images from<br><span class="grad">MB to KB — Instantly</span></h1>
+    <p>Browser-based compression. Your images never leave your device. Supports JPG, PNG, and WEBP.</p>
+  </div>
+</div>
+
+<section style="padding:0 0 60px;">
+  <div class="container">
+    <div class="tool-box">
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" />
+        <span class="drop-icon">🖼️</span>
+        <div class="drop-text">Drop your image here or click to browse</div>
+        <div class="drop-sub">JPG · PNG · WEBP · Max recommended: 20MB</div>
+      </div>
+
+      <!-- Controls (hidden until file loaded) -->
+      <div id="controls-section" style="display:none;margin-top:28px;">
+
+        <!-- Image previews -->
+        <div class="preview-row" id="preview-row">
+          <div class="img-preview-box">
+            <div class="label">Original</div>
+            <img id="orig-preview" src="" alt="Original image" />
+            <div class="size-val" id="orig-size">—</div>
+          </div>
+          <div class="img-preview-box">
+            <div class="label">Compressed</div>
+            <img id="comp-preview" src="" alt="Compressed image" />
+            <div class="size-val" id="comp-size" style="color:var(--green);">—</div>
+          </div>
+        </div>
+
+        <!-- Reduction badge -->
+        <div class="size-reduction" id="reduction-box" style="display:none;">
+          <div class="pct" id="reduction-pct">0%</div>
+          <div><small>Size reduced — great job! 🎉</small></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-grid">
+          <div>
+            <div class="ctrl-label">Quality</div>
+            <div class="ctrl-row">
+              <input type="range" id="quality-slider" min="10" max="95" value="75" oninput="updateQuality(this)" />
+              <div class="slider-val" id="quality-val">75%</div>
+            </div>
+          </div>
+          <div>
+            <div class="ctrl-label">Output Format</div>
+            <div class="fmt-tabs">
+              <div class="fmt-tab active" onclick="setFormat('jpeg',this)">JPG</div>
+              <div class="fmt-tab" onclick="setFormat('png',this)">PNG</div>
+              <div class="fmt-tab" onclick="setFormat('webp',this)">WEBP</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rename -->
+        <div class="ctrl-label">Rename File (optional)</div>
+        <div class="rename-row">
+          <div class="input-wrap" style="flex:1;">
+            <input type="text" id="rename-input" placeholder="e.g. my-photo-compressed" />
+          </div>
+          <div style="color:var(--white3);font-size:.9rem;line-height:3;padding:0 8px;" id="rename-ext">.jpg</div>
+        </div>
+
+        <!-- Compress button -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" style="font-size:1rem;padding:14px 28px;" onclick="compressImage()">
+            🗜️ Compress Image
+          </button>
+          <button class="btn btn-ghost" onclick="resetCompressor()">🔄 New Image</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;">
+      <div class="card text-center anim-up d1" style="padding:24px 18px;">
+        <div style="font-size:2rem;margin-bottom:10px;">🔒</div>
+        <h3 style="font-size:.95rem;margin-bottom:6px;">100% Private</h3>
+        <p style="font-size:.85rem;">All compression happens in your browser. Your images are never uploaded.</p>
+      </div>
+      <div class="card text-center anim-up d2" style="padding:24px 18px;">
+        <div style="font-size:2rem;margin-bottom:10px;">⚡</div>
+        <h3 style="font-size:.95rem;margin-bottom:6px;">Instant Results</h3>
+        <p style="font-size:.85rem;">Compress any image in under 2 seconds with live preview.</p>
+      </div>
+      <div class="card text-center anim-up d3" style="padding:24px 18px;">
+        <div style="font-size:2rem;margin-bottom:10px;">🎨</div>
+        <h3 style="font-size:.95rem;margin-bottom:6px;">Format Conversion</h3>
+        <p style="font-size:.85rem;">Convert between JPG, PNG, and WEBP during compression.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section class="section" style="background:var(--navy2);">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:40px;">
+      <div class="section-label">❓ FAQ</div>
+      <h2 class="section-title">Image Compressor <span class="grad">FAQs</span></h2>
+    </div>
+    <div class="faq-grid" style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px;">
+      <div class="faq-item"><button class="faq-q">Is the compression lossless or lossy? <span class="icon">+</span></button><div class="faq-a">The compression is lossy — meaning it reduces file size by slightly reducing quality. You control the quality percentage with the slider. At 75%+ quality, the difference is barely visible.</div></div>
+      <div class="faq-item"><button class="faq-q">Is my image uploaded to your servers? <span class="icon">+</span></button><div class="faq-a">No! All compression is done entirely within your browser using JavaScript's Canvas API. Your files never leave your device.</div></div>
+      <div class="faq-item"><button class="faq-q">What image formats are supported? <span class="icon">+</span></button><div class="faq-a">SwiftGrab's compressor supports JPG (JPEG), PNG, and WEBP image formats. You can also convert between formats during compression.</div></div>
+      <div class="faq-item"><button class="faq-q">Is there a file size limit? <span class="icon">+</span></button><div class="faq-a">We recommend files up to 20MB for best performance. Larger files may take slightly longer to process since everything runs in your browser.</div></div>
+      <div class="faq-item"><button class="faq-q">Can I compress multiple images at once? <span class="icon">+</span></button><div class="faq-a">Currently, SwiftGrab supports one image at a time. Batch compression is coming soon! You can compress images one by one using the "New Image" button.</div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div><div class="footer-logo-text">⚡ Swift<span style="color:var(--cyan)">Grab</span></div><p style="font-size:.9rem;color:var(--white2);">Free online tools for everyone.</p></div>
+      <div class="footer-col"><h4>Tools</h4><ul class="footer-links"><li><a href="youtube.html">YT Downloader</a></li><li><a href="compress.html">Compressor</a></li><li><a href="passport.html">Passport Photo</a></li></ul></div>
+      <div class="footer-col"><h4>Info</h4><ul class="footer-links"><li><a href="index.html">Home</a></li><li><a href="terms.html">Terms</a></li><li><a href="privacy.html">Privacy</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul class="footer-links"><li><a href="terms.html">Terms & Conditions</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2026 SwiftGrab. All rights reserved.</p><p>⚡ Fast · 🔒 Private · 💸 Free</p></div>
+  </div>
+</footer>
+
+<!-- ── AD MODAL ── -->
+<div class="modal-overlay" id="ad-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="ad-close-btn">✕</button>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:4px;">Advertisement</div>
+      <h3 style="font-size:1.1rem;font-weight:700;">Compressing your image...</h3>
+    </div>
+    <div class="ad-banner ad-banner-300" style="margin-bottom:20px;">📢 Your Ad Here — 300×250</div>
+    <div style="text-align:center;">
+      <div style="font-size:.85rem;color:var(--white2);margin-bottom:10px;" id="ad-timer">Close in 3s</div>
+      <div class="progress-wrap" style="max-width:200px;margin:0 auto 12px;"><div class="progress-bar" id="ad-progress" style="width:0%;"></div></div>
+      <p style="font-size:.8rem;color:var(--white3);">Ads keep SwiftGrab free 🙏</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script src="pwa.js"></script>
+<script>
+/* ── Image Compressor Logic (Canvas API — 100% browser-based) ── */
+
+let originalFile    = null;
+let originalDataURL = null;
+let outputFormat    = 'jpeg';
+
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+
+// Drag & drop
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  if (!file.type.startsWith('image/')) { showToast('Please select a valid image file.', 'error'); return; }
+  if (file.size > 30 * 1024 * 1024) { showToast('File too large. Max 30MB recommended.', 'warn'); return; }
+
+  originalFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    originalDataURL = e.target.result;
+    document.getElementById('orig-preview').src = originalDataURL;
+    document.getElementById('orig-size').textContent = formatBytes(file.size);
+    document.getElementById('rename-input').value = file.name.replace(/\.[^/.]+$/, '') + '-compressed';
+    document.getElementById('controls-section').style.display = 'block';
+    document.getElementById('comp-preview').src = originalDataURL;
+    document.getElementById('comp-size').textContent = formatBytes(file.size);
+    document.getElementById('reduction-box').style.display = 'none';
+    dropZone.style.display = 'none';
+    showToast('Image loaded! Adjust settings and compress.', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateQuality(slider) {
+  document.getElementById('quality-val').textContent = slider.value + '%';
+}
+
+function setFormat(fmt, el) {
+  outputFormat = fmt;
+  document.querySelectorAll('.fmt-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const extMap = { jpeg: '.jpg', png: '.png', webp: '.webp' };
+  document.getElementById('rename-ext').textContent = extMap[fmt];
+}
+
+async function compressImage() {
+  if (!originalFile) { showToast('Please select an image first.', 'warn'); return; }
+
+  // Show ad
+  animateAdProgress();
+  await showAdModal({ seconds: 3 });
+
+  // Do actual compression
+  const quality = parseInt(document.getElementById('quality-slider').value) / 100;
+
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width  = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const mimeType = outputFormat === 'png' ? 'image/png' : outputFormat === 'webp' ? 'image/webp' : 'image/jpeg';
+    const q = outputFormat === 'png' ? 1 : quality; // PNG is lossless
+
+    canvas.toBlob(blob => {
+      const compressedUrl = URL.createObjectURL(blob);
+      document.getElementById('comp-preview').src = compressedUrl;
+
+      const origKB = originalFile.size;
+      const compKB = blob.size;
+      const reduction = Math.round((1 - compKB / origKB) * 100);
+
+      document.getElementById('comp-size').textContent = formatBytes(blob.size);
+      document.getElementById('reduction-pct').textContent = Math.max(0, reduction) + '%';
+      document.getElementById('reduction-box').style.display = 'block';
+
+      // Add download button
+      const existing = document.getElementById('dl-result-btn');
+      if (existing) existing.remove();
+      const dlBtn = document.createElement('a');
+      dlBtn.id = 'dl-result-btn';
+      dlBtn.className = 'btn btn-primary';
+      dlBtn.style = 'font-size:1rem;padding:14px 28px;margin-top:16px;display:inline-flex;';
+      dlBtn.textContent = '⬇️ Download Compressed Image';
+      const extMap = { jpeg: '.jpg', png: '.png', webp: '.webp' };
+      const name = (document.getElementById('rename-input').value || 'compressed') + extMap[outputFormat];
+      dlBtn.download = name;
+      dlBtn.href = compressedUrl;
+      document.querySelector('.tool-box').appendChild(dlBtn);
+
+      showToast(`✅ Compressed ${formatBytes(origKB)} → ${formatBytes(compKB)} (${Math.max(0,reduction)}% smaller)`, 'success', 4000);
+    }, mimeType, q);
+  };
+  img.src = originalDataURL;
+}
+
+function animateAdProgress() {
+  const bar = document.getElementById('ad-progress');
+  if (!bar) return;
+  bar.style.width = '0%';
+  let pct = 0;
+  const iv = setInterval(() => { pct += 2.2; bar.style.width = Math.min(pct,100)+'%'; if(pct>=100) clearInterval(iv); }, 66);
+}
+
+function resetCompressor() {
+  originalFile = null; originalDataURL = null;
+  document.getElementById('controls-section').style.display = 'none';
+  document.getElementById('reduction-box').style.display = 'none';
+  dropZone.style.display = '';
+  fileInput.value = '';
+  const dl = document.getElementById('dl-result-btn');
+  if (dl) dl.remove();
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+</script>
+</body>
+</html>

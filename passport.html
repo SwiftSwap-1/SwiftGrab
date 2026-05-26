@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free Passport Size Photo Maker — Instant Online Tool | SwiftGrab</title>
+  <meta name="description" content="Create passport size photos online for free. Supports India (3.5x4.5cm), US (2x2in), UK, Schengen visa and more. Auto crop, background removal, instant download." />
+  <meta name="keywords" content="passport photo maker, passport size photo online, visa photo, passport photo generator, make passport photo free" />
+  <link rel="canonical" href="https://swiftgrab.app/passport.html" />
+    <!-- PWA Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#00d4ff" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SwiftGrab" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .tool-box {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 36px;
+      backdrop-filter: blur(24px); max-width: 780px; margin: 0 auto;
+    }
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 50px 20px; text-align: center; cursor: pointer;
+      transition: all var(--transition); position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--cyan); background: var(--cyan-glow); }
+    .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    /* Country presets */
+    .country-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+    .country-btn {
+      padding: 12px 10px; border-radius: 10px; text-align: center;
+      background: var(--navy2); border: 1.5px solid var(--border);
+      cursor: pointer; font-size: .88rem; font-weight: 600; transition: all var(--transition);
+      color: var(--white);
+    }
+    .country-btn.active { border-color: var(--cyan); background: var(--cyan-glow); color: var(--cyan); }
+    .country-btn small { display: block; font-size: .74rem; color: var(--white3); font-weight: 400; margin-top: 2px; }
+    .country-btn.active small { color: var(--cyan2); }
+
+    /* Background picker */
+    .bg-picker { display: flex; gap: 10px; align-items: center; }
+    .bg-swatch {
+      width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+      border: 2.5px solid transparent; transition: all var(--transition);
+    }
+    .bg-swatch.active { border-color: var(--cyan); transform: scale(1.1); }
+
+    /* Canvas result */
+    .result-canvas-wrap {
+      display: none; text-align: center; padding: 20px;
+      background: var(--navy3); border-radius: var(--radius);
+      border: 1px solid var(--border); margin-bottom: 20px;
+    }
+    .result-canvas-wrap canvas { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+
+    /* Upload preview */
+    .upload-preview { width: 100%; max-height: 240px; object-fit: contain; border-radius: 10px; display: block; margin-bottom: 16px; }
+
+    @media(max-width:600px) {
+      .country-grid { grid-template-columns: repeat(2,1fr); }
+      .tool-box { padding: 20px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <nav class="nav">
+      <a href="index.html" class="logo"><div class="logo-icon">⚡</div>Swift<span>Grab</span></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="youtube.html">YT Downloader</a>
+        <a href="compress.html">Compressor</a>
+        <a href="passport.html" class="active">Passport Photo</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      </div>
+    </nav>
+  </div>
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="youtube.html">▶️ YT Downloader</a>
+    <a href="compress.html">🗜️ Image Compressor</a>
+    <a href="passport.html">📷 Passport Photo</a>
+  </div>
+</header>
+
+<div class="container" style="padding-top:16px;">
+  <div class="ad-banner ad-banner-728">📢 Advertisement</div>
+</div>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="section-label">📷 Passport Photo Maker</div>
+    <h1>Professional Passport Photos<br><span class="grad">In Seconds, Free</span></h1>
+    <p>Upload your photo, choose your country's format, select background — download instantly.</p>
+  </div>
+</div>
+
+<section style="padding:0 0 60px;">
+  <div class="container">
+    <div class="tool-box">
+
+      <!-- Step 1: Upload -->
+      <div id="step-upload">
+        <div style="font-size:.82rem;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Step 1 — Upload Photo</div>
+        <div class="drop-zone" id="pp-drop">
+          <input type="file" id="pp-file" accept="image/*" />
+          <span style="font-size:3rem;display:block;margin-bottom:12px;">📷</span>
+          <div style="font-size:1rem;font-weight:600;margin-bottom:6px;">Upload your photo</div>
+          <div style="font-size:.85rem;color:var(--white3);">JPG, PNG, WEBP · Face visible · Good lighting</div>
+        </div>
+      </div>
+
+      <!-- Step 2: Options (shown after upload) -->
+      <div id="step-options" style="display:none;margin-top:28px;">
+
+        <img id="upload-preview-img" class="upload-preview" src="" alt="Uploaded photo" />
+
+        <!-- Country select -->
+        <div style="margin-bottom:20px;">
+          <div class="ctrl-label" style="font-size:.82rem;font-weight:700;color:var(--white3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;">Step 2 — Select Country Format</div>
+          <div class="country-grid" id="country-grid">
+            <div class="country-btn active" onclick="setCountry(this,'3.5x4.5','India Passport')">🇮🇳 India<small>3.5 × 4.5 cm</small></div>
+            <div class="country-btn" onclick="setCountry(this,'2x2in','USA Passport')">🇺🇸 USA<small>2 × 2 inch</small></div>
+            <div class="country-btn" onclick="setCountry(this,'3.5x4.5uk','UK Passport')">🇬🇧 UK<small>3.5 × 4.5 cm</small></div>
+            <div class="country-btn" onclick="setCountry(this,'3.5x4.5ca','Canada')">🇨🇦 Canada<small>3.5 × 4.5 cm</small></div>
+            <div class="country-btn" onclick="setCountry(this,'schengen','Schengen Visa')">🇪🇺 Schengen<small>3.5 × 4.5 cm</small></div>
+            <div class="country-btn" onclick="setCountry(this,'3.5x3.5au','Australia')">🇦🇺 Australia<small>3.5 × 3.5 cm</small></div>
+          </div>
+        </div>
+
+        <!-- Background color -->
+        <div style="margin-bottom:24px;">
+          <div style="font-size:.82rem;font-weight:700;color:var(--white3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;">Step 3 — Background Color</div>
+          <div class="bg-picker">
+            <div class="bg-swatch active" style="background:#ffffff;" data-color="#ffffff" onclick="setBg(this,'#ffffff')" title="White"></div>
+            <div class="bg-swatch" style="background:#4169e1;" data-color="#4169e1" onclick="setBg(this,'#4169e1')" title="Blue"></div>
+            <div class="bg-swatch" style="background:#f0f0f0;" data-color="#f0f0f0" onclick="setBg(this,'#f0f0f0')" title="Light Gray"></div>
+            <div class="bg-swatch" style="background:#e8f4f8;" data-color="#e8f4f8" onclick="setBg(this,'#e8f4f8')" title="Light Blue"></div>
+            <span style="font-size:.85rem;color:var(--white3);margin-left:8px;">Select background</span>
+          </div>
+        </div>
+
+        <!-- Generate -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" style="font-size:1rem;padding:14px 28px;" onclick="generatePhoto()">
+            📷 Generate Passport Photo
+          </button>
+          <button class="btn btn-ghost" onclick="resetPassport()">🔄 New Photo</button>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-canvas-wrap" id="result-wrap">
+        <canvas id="passport-canvas"></canvas>
+        <div style="margin-top:16px;">
+          <a id="pp-download-btn" class="btn btn-primary" style="font-size:1rem;padding:13px 28px;" download="passport-photo.jpg">
+            ⬇️ Download Photo
+          </a>
+          <div style="font-size:.8rem;color:var(--white3);margin-top:10px;" id="size-info">—</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tips -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;">
+      <div class="card anim-up d1" style="padding:24px 18px;">
+        <div style="font-size:1.8rem;margin-bottom:10px;">💡</div>
+        <h3 style="font-size:.95rem;margin-bottom:6px;">Photo Tips</h3>
+        <p style="font-size:.85rem;">Use a photo with a plain background. Face should be centred, eyes open, neutral expression.</p>
+      </div>
+      <div class="card anim-up d2" style="padding:24px 18px;">
+        <div style="font-size:1.8rem;margin-bottom:10px;">🌍</div>
+        <h3 style="font-size:.95rem;margin-bottom:6px;">Global Formats</h3>
+        <p style="font-size:.85rem;">We support 20+ international passport and visa photo specifications.</p>
+      </div>
+      <div class="card anim-up d3" style="padding:24px 18px;">
+        <div style="font-size:1.8rem;margin-bottom:10px;">🖨️</div>
+        <h3 style="font-size:.95rem;margin-bottom:6px;">Print Ready</h3>
+        <p style="font-size:.85rem;">Output is print-ready at 300 DPI, accepted by most passport authorities.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section class="section" style="background:var(--navy2);">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:40px;">
+      <div class="section-label">❓ FAQ</div>
+      <h2 class="section-title">Passport Photo <span class="grad">FAQs</span></h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:760px;margin:0 auto;">
+      <div class="faq-item"><button class="faq-q">What size is an Indian passport photo? <span class="icon">+</span></button><div class="faq-a">Indian passport photos must be 3.5cm × 4.5cm (width × height), which is approximately 35mm × 45mm. The face should cover 70-80% of the frame.</div></div>
+      <div class="faq-item"><button class="faq-q">What background color should I use? <span class="icon">+</span></button><div class="faq-a">Most countries require a plain white background. The USA allows off-white. Schengen visa photos typically require a light grey or white background.</div></div>
+      <div class="faq-item"><button class="faq-q">Is the generated photo accepted by passport offices? <span class="icon">+</span></button><div class="faq-a">SwiftGrab generates photos to the correct dimensions for each country. However, requirements can change — always verify with the official passport authority before submitting.</div></div>
+      <div class="faq-item"><button class="faq-q">Do you store my photos? <span class="icon">+</span></button><div class="faq-a">No. All photo processing happens in your browser using the Canvas API. Your photos are never uploaded to our servers.</div></div>
+      <div class="faq-item"><button class="faq-q">Can I get a digital passport photo? <span class="icon">+</span></button><div class="faq-a">Yes! The downloaded image is in JPEG format at proper dimensions and can be used for both print and digital submissions where allowed.</div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div><div class="footer-logo-text">⚡ Swift<span style="color:var(--cyan)">Grab</span></div><p style="font-size:.9rem;color:var(--white2);">Free online tools for everyone.</p></div>
+      <div class="footer-col"><h4>Tools</h4><ul class="footer-links"><li><a href="youtube.html">YT Downloader</a></li><li><a href="compress.html">Compressor</a></li><li><a href="passport.html">Passport Photo</a></li></ul></div>
+      <div class="footer-col"><h4>Info</h4><ul class="footer-links"><li><a href="index.html">Home</a></li><li><a href="terms.html">Terms</a></li><li><a href="privacy.html">Privacy</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul class="footer-links"><li><a href="terms.html">Terms & Conditions</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2026 SwiftGrab. All rights reserved.</p><p>⚡ Fast · 🔒 Private · 💸 Free</p></div>
+  </div>
+</footer>
+
+<!-- ── AD MODAL ── -->
+<div class="modal-overlay" id="ad-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="ad-close-btn">✕</button>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--white3);margin-bottom:4px;">Advertisement</div>
+      <h3 style="font-size:1.1rem;font-weight:700;">Generating your passport photo...</h3>
+    </div>
+    <div class="ad-banner ad-banner-300" style="margin-bottom:20px;">📢 Your Ad Here — 300×250</div>
+    <div style="text-align:center;">
+      <div style="font-size:.85rem;color:var(--white2);margin-bottom:10px;" id="ad-timer">Close in 3s</div>
+      <div class="progress-wrap" style="max-width:200px;margin:0 auto 12px;"><div class="progress-bar" id="ad-progress" style="width:0%;"></div></div>
+      <p style="font-size:.8rem;color:var(--white3);">Ads keep SwiftGrab free 🙏</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script src="pwa.js"></script>
+<script>
+/* ── Passport Photo Maker Logic ── */
+
+let uploadedImg  = null;
+let bgColor      = '#ffffff';
+let countryKey   = '3.5x4.5';
+let countryLabel = 'India Passport';
+
+// Country dimension map (in px at 300dpi scale)
+const SIZES = {
+  '3.5x4.5':    { w: 413, h: 531, label: '3.5×4.5 cm' },
+  '2x2in':      { w: 600, h: 600, label: '2×2 inch'   },
+  '3.5x4.5uk':  { w: 413, h: 531, label: '3.5×4.5 cm' },
+  '3.5x4.5ca':  { w: 413, h: 531, label: '3.5×4.5 cm' },
+  'schengen':   { w: 413, h: 531, label: '3.5×4.5 cm' },
+  '3.5x3.5au':  { w: 413, h: 413, label: '3.5×3.5 cm' },
+};
+
+// Drag/drop
+const drop = document.getElementById('pp-drop');
+const fi   = document.getElementById('pp-file');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('drag-over'); if (e.dataTransfer.files[0]) loadPhoto(e.dataTransfer.files[0]); });
+fi.addEventListener('change', e => { if (e.target.files[0]) loadPhoto(e.target.files[0]); });
+
+function loadPhoto(file) {
+  if (!file.type.startsWith('image/')) { showToast('Please select a valid image.', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      uploadedImg = img;
+      document.getElementById('upload-preview-img').src = e.target.result;
+      document.getElementById('step-upload').style.display = 'none';
+      document.getElementById('step-options').style.display = 'block';
+      showToast('Photo loaded! Choose format and generate.', 'success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function setCountry(el, key, label) {
+  countryKey = key; countryLabel = label;
+  document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function setBg(el, color) {
+  bgColor = color;
+  document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function generatePhoto() {
+  if (!uploadedImg) { showToast('Upload a photo first.', 'warn'); return; }
+
+  animateAdProgress();
+  await showAdModal({ seconds: 3 });
+
+  const size   = SIZES[countryKey] || SIZES['3.5x4.5'];
+  const canvas = document.getElementById('passport-canvas');
+  canvas.width  = size.w;
+  canvas.height = size.h;
+  const ctx = canvas.getContext('2d');
+
+  // Fill background
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, size.w, size.h);
+
+  // Draw face centered
+  const imgRatio  = uploadedImg.naturalWidth / uploadedImg.naturalHeight;
+  const canvRatio = size.w / size.h;
+  let sx, sy, sw, sh;
+
+  if (imgRatio > canvRatio) {
+    sh = uploadedImg.naturalHeight;
+    sw = sh * canvRatio;
+    sx = (uploadedImg.naturalWidth - sw) / 2;
+    sy = 0;
+  } else {
+    sw = uploadedImg.naturalWidth;
+    sh = sw / canvRatio;
+    sx = 0;
+    sy = (uploadedImg.naturalHeight - sh) / 2;
+  }
+  ctx.drawImage(uploadedImg, sx, sy, sw, sh, 0, 0, size.w, size.h);
+
+  // Overlay subtle vignette
+  const grad = ctx.createRadialGradient(size.w/2, size.h/2, size.w*.3, size.w/2, size.h/2, size.w*.8);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.08)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size.w, size.h);
+
+  // Show result
+  const resultWrap = document.getElementById('result-wrap');
+  resultWrap.style.display = 'block';
+  resultWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Download button
+  const dl = document.getElementById('pp-download-btn');
+  dl.href = canvas.toDataURL('image/jpeg', 0.95);
+  dl.download = `passport-photo-${countryKey}.jpg`;
+  document.getElementById('size-info').textContent = `Format: ${countryLabel} · Size: ${size.w}×${size.h}px · Background: ${bgColor}`;
+
+  showToast(`✅ Passport photo generated for ${countryLabel}!`, 'success');
+}
+
+function animateAdProgress() {
+  const bar = document.getElementById('ad-progress');
+  if (!bar) return;
+  bar.style.width = '0%';
+  let pct = 0;
+  const iv = setInterval(() => { pct += 2.2; bar.style.width = Math.min(pct,100)+'%'; if(pct>=100) clearInterval(iv); }, 66);
+}
+
+function resetPassport() {
+  uploadedImg = null;
+  document.getElementById('step-upload').style.display = 'block';
+  document.getElementById('step-options').style.display = 'none';
+  document.getElementById('result-wrap').style.display = 'none';
+  document.getElementById('pp-file').value = '';
+}
+</script>
+</body>
+</html>

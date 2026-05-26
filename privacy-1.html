@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — SwiftGrab</title>
+  <meta name="description" content="SwiftGrab's Privacy Policy. We collect no personal data. All processing is done in your browser. Read how we use cookies and third-party services." />
+  <meta name="robots" content="index, follow" />
+    <!-- PWA Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#00d4ff" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SwiftGrab" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .legal-content {
+      max-width: 800px; margin: 0 auto;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 48px;
+      backdrop-filter: blur(20px);
+    }
+    .legal-content h2 { font-size: 1.2rem; font-weight: 700; color: var(--cyan); margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .legal-content h2:first-of-type { margin-top: 0; }
+    .legal-content p  { color: var(--white2); font-size: .95rem; margin-bottom: 14px; line-height: 1.8; }
+    .legal-content ul { color: var(--white2); font-size: .95rem; padding-left: 22px; margin-bottom: 14px; }
+    .legal-content ul li { margin-bottom: 6px; line-height: 1.7; }
+    .last-updated {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--cyan-glow); border: 1px solid rgba(0,212,255,.25);
+      border-radius: 100px; padding: 5px 14px; font-size: .8rem; font-weight: 600;
+      color: var(--cyan); margin-bottom: 28px;
+    }
+    .highlight-box {
+      background: rgba(0,229,160,.07); border: 1px solid rgba(0,229,160,.25);
+      border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .highlight-box .icon { font-size: 1.5rem; flex-shrink: 0; }
+    .highlight-box p { color: var(--white); margin: 0; font-size: .95rem; }
+    @media(max-width:600px) { .legal-content { padding: 24px 18px; } }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <nav class="nav">
+      <a href="index.html" class="logo"><div class="logo-icon">⚡</div>Swift<span>Grab</span></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="youtube.html">YT Downloader</a>
+        <a href="compress.html">Compressor</a>
+        <a href="passport.html">Passport Photo</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      </div>
+    </nav>
+  </div>
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="index.html">🏠 Home</a>
+    <a href="youtube.html">▶️ YT Downloader</a>
+    <a href="compress.html">🗜️ Image Compressor</a>
+    <a href="passport.html">📷 Passport Photo</a>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="section-label">🔒 Legal</div>
+    <h1>Privacy <span class="grad">Policy</span></h1>
+    <p>Your privacy is our top priority. Here's exactly what we collect — and what we don't.</p>
+  </div>
+</div>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="legal-content">
+      <div class="last-updated">📅 Last Updated: December 2024</div>
+
+      <div class="highlight-box">
+        <div class="icon">🔒</div>
+        <p><strong>TL;DR:</strong> SwiftGrab does not collect, store, or share any personal data or files. All image and photo processing happens entirely in your browser. We never see your files.</p>
+      </div>
+
+      <h2>1. Introduction</h2>
+      <p>SwiftGrab ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we handle information when you use our website at swiftgrab.app and all associated tools.</p>
+
+      <h2>2. Information We Do NOT Collect</h2>
+      <p>We want to be completely transparent. SwiftGrab does NOT collect:</p>
+      <ul>
+        <li>Any personal identification information (name, email, phone, address)</li>
+        <li>Any images or files you upload or process</li>
+        <li>YouTube URLs you paste into our downloader</li>
+        <li>Payment information (all tools are free)</li>
+        <li>Account credentials (no accounts required)</li>
+        <li>Biometric data</li>
+      </ul>
+
+      <h2>3. How Our Tools Work</h2>
+      <p>All of SwiftGrab's processing tools are 100% browser-based:</p>
+      <ul>
+        <li><strong>Image Compressor:</strong> Uses your browser's Canvas API. Images are processed locally on your device and never transmitted to any server.</li>
+        <li><strong>Passport Photo Maker:</strong> Photo cropping and resizing happens entirely within your browser using JavaScript. Nothing is uploaded.</li>
+        <li><strong>YouTube Downloader:</strong> We extract the video ID from the URL you provide and redirect you to a third-party download service. We do not process or store any video data.</li>
+      </ul>
+
+      <h2>4. Cookies</h2>
+      <p>SwiftGrab uses minimal cookies for the following purposes:</p>
+      <ul>
+        <li><strong>Theme preference:</strong> We store your dark/light mode preference in localStorage (not a server cookie) so it persists between visits. This data stays on your device only.</li>
+        <li><strong>Analytics (if enabled):</strong> We may use privacy-friendly analytics (such as Google Analytics with IP anonymization) to understand general traffic patterns. This data is aggregated and anonymous.</li>
+        <li><strong>Advertising cookies:</strong> If third-party ad networks are enabled, they may place cookies on your device to serve relevant ads. You can control cookie preferences through your browser settings.</li>
+      </ul>
+
+      <h2>5. Third-Party Services</h2>
+      <p>SwiftGrab may use or link to the following third-party services:</p>
+      <ul>
+        <li><strong>SaveFrom.net:</strong> Our YouTube downloader redirects to this service. Their privacy policy governs your interaction with their platform.</li>
+        <li><strong>Google Fonts:</strong> Used to load website fonts. Google may log font requests. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+        <li><strong>Advertising Networks:</strong> Ad placeholders on our site may be replaced with real ad networks (e.g., Google AdSense). These networks may use cookies to serve personalized ads.</li>
+      </ul>
+
+      <h2>6. Google AdSense & Advertising</h2>
+      <p>SwiftGrab uses advertising to keep the service free. Third-party vendors, including Google, may use cookies to serve ads based on your prior visits. You can opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ad Settings</a> or <a href="https://www.aboutads.info/" target="_blank" rel="noopener">AboutAds.info</a>.</p>
+
+      <h2>7. Children's Privacy</h2>
+      <p>SwiftGrab's services are not directed to children under 13 years of age. We do not knowingly collect any information from children. If you believe a child has provided us with personal data, please contact us immediately.</p>
+
+      <h2>8. Data Security</h2>
+      <p>Since we do not collect or store personal data or files, there is minimal security risk to your information. The theme preference stored in localStorage is encrypted by your browser and inaccessible to third parties.</p>
+
+      <h2>9. Your Rights</h2>
+      <p>Since we do not collect personal data, most data rights (access, deletion, portability) do not apply. However, you may:</p>
+      <ul>
+        <li>Clear your localStorage/cookies at any time via browser settings</li>
+        <li>Contact us to request clarification about our data practices</li>
+        <li>Opt out of ad personalization via your browser or ad network settings</li>
+      </ul>
+
+      <h2>10. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. We will notify users of significant changes by updating the "Last Updated" date. Continued use of SwiftGrab after changes indicates acceptance of the updated policy.</p>
+
+      <h2>11. Contact Us</h2>
+      <p>If you have any questions or concerns about this Privacy Policy, please contact us at <a href="mailto:privacy@swiftgrab.app">privacy@swiftgrab.app</a>.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div><div class="footer-logo-text">⚡ Swift<span style="color:var(--cyan)">Grab</span></div><p style="font-size:.9rem;color:var(--white2);">Free online tools for everyone.</p></div>
+      <div class="footer-col"><h4>Tools</h4><ul class="footer-links"><li><a href="youtube.html">YT Downloader</a></li><li><a href="compress.html">Compressor</a></li><li><a href="passport.html">Passport Photo</a></li></ul></div>
+      <div class="footer-col"><h4>Info</h4><ul class="footer-links"><li><a href="index.html">Home</a></li><li><a href="terms.html">Terms</a></li><li><a href="privacy.html">Privacy</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul class="footer-links"><li><a href="terms.html">Terms & Conditions</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2026 SwiftGrab. All rights reserved.</p><p>⚡ Fast · 🔒 Private · 💸 Free</p></div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script src="pwa.js"></script>
+</body>
+</html>
