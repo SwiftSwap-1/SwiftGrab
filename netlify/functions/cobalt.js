@@ -1,10 +1,5 @@
-/* ============================================================
-   SwiftGrab — Cobalt API Proxy (Netlify Function)
-   Bypasses CORS so browser can fetch download URLs
-   ============================================================ */
-
+/* SwiftGrab — Cobalt API Proxy */
 exports.handler = async (event) => {
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -21,17 +16,15 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const COBALT_INSTANCES = [
+  const INSTANCES = [
     'https://api.cobalt.tools/',
     'https://cobalt.api.timelessnesses.me/',
     'https://cobalt.drgns.space/',
   ];
 
-  let lastError = '';
-
-  for (const instance of COBALT_INSTANCES) {
+  for (const url of INSTANCES) {
     try {
-      const res = await fetch(instance, {
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -39,9 +32,7 @@ exports.handler = async (event) => {
         },
         body: event.body,
       });
-
       const text = await res.text();
-
       if (res.ok) {
         return {
           statusCode: 200,
@@ -52,17 +43,14 @@ exports.handler = async (event) => {
           body: text,
         };
       }
-
-      lastError = `${instance} returned ${res.status}`;
     } catch (err) {
-      lastError = `${instance} failed: ${err.message}`;
-      console.warn('[cobalt-proxy]', lastError);
+      console.warn('[cobalt]', url, err.message);
     }
   }
 
   return {
     statusCode: 502,
     headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify({ status: 'error', message: 'All Cobalt instances failed', detail: lastError }),
+    body: JSON.stringify({ status: 'error', message: 'All Cobalt instances failed' }),
   };
 };
